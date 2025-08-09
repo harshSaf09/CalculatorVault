@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") // Use KSP instead of kapt
     id("dagger.hilt.android.plugin") // Apply Hilt plugin
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -66,9 +67,13 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Datastore
     implementation(libs.androidx.datastore.preferences)
+
+    //Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.hilt.compiler)
 
