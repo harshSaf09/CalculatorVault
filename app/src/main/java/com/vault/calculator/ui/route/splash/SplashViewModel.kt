@@ -1,4 +1,4 @@
-package com.vault.calculator.ui.theme.route.splash
+package com.vault.calculator.ui.route.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

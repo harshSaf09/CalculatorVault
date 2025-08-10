@@ -1,4 +1,4 @@
-package com.vault.calculator.ui.theme.route.gettingstarted
+package com.vault.calculator.ui.route.gettingstarted
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
