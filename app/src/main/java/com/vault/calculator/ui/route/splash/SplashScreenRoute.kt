@@ -22,7 +22,7 @@ fun SplashScreenRoute(
 
     LaunchedEffect(nextScreen) {
         nextScreen?.let { destination ->
-            navController.navigate(destination.route) {
+            navController.navigate(destination) {
                 popUpTo(Screen.Splash.route) { inclusive = true }
             }
         }

@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.material3)
     implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,6 +69,7 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
 
     // Datastore
     implementation(libs.androidx.datastore.preferences)
@@ -75,6 +77,7 @@ dependencies {
     //Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    ksp(libs.hilt.compiler)
+    // Coil
+    implementation(libs.coil.compose)
 
 }

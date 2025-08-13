@@ -8,8 +8,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vault.calculator.ui.route.gettingstarted.GettingStartedRoute
-import com.vault.calculator.ui.route.maincalculator.KEY_SHOW_ENTER_PASSWORD
+import com.vault.calculator.ui.route.maincalculator.KEY_PIN
 import com.vault.calculator.ui.route.maincalculator.MainCalculatorRoute
+import com.vault.calculator.ui.route.privatescreen.PrivateScreenRoute
 import com.vault.calculator.ui.route.splash.SplashScreenRoute
 
 @Composable
@@ -22,22 +23,18 @@ fun CalculatorApp(navController: NavHostController) {
             SplashScreenRoute(navController)
         }
         composable(
-            route = Screen.MainCalculator.route + "/{$KEY_SHOW_ENTER_PASSWORD}",
+            route = Screen.MainCalculator.route + "/{$KEY_PIN}",
             arguments = listOf(
-                navArgument(name = KEY_SHOW_ENTER_PASSWORD) {
-                    type = NavType.BoolType
-                    defaultValue = false
+                navArgument(name = KEY_PIN) {
+                    type = NavType.StringType
                     nullable = true
                 }
             )
         ) { entry ->
-            MainCalculatorRoute(
-                navController,
-                showEnterPassword = entry.arguments?.getBoolean(KEY_SHOW_ENTER_PASSWORD) ?: false
-            )
+            MainCalculatorRoute(navController)
         }
         composable(route = Screen.MainVault.route) {
-            Text("Don't know")
+            PrivateScreenRoute(navController)
         }
         composable(route = Screen.RecoverySetup.route) {
             Text("Don't know")

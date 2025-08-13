@@ -1,5 +1,6 @@
 package com.vault.calculator.ui.route.maincalculator
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,93 +40,79 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.vault.calculator.R
+import com.vault.calculator.ui.Screen
 import com.vault.calculator.ui.theme.AppDimensions
 import com.vault.calculator.ui.theme.CalculatorTheme
+import javax.inject.Inject
 
 @Composable
 fun MainCalculatorRoute(
     navHostController: NavHostController,
-    showEnterPassword: Boolean,
     viewModel: MainCalculatorViewModel = hiltViewModel()
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Text("Main Calculator screen")
-    }
-}
-
-const val KEY_SHOW_ENTER_PASSWORD = "showEnterPassword"
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalculatorWithPinScreen() {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showPinSheet by remember { mutableStateOf(true) }
-    var pin by remember { mutableStateOf("") }
-    var reEnterMode by remember { mutableStateOf(false) }
-
-    // Main calculator screen
-    Scaffold(
-        topBar = { /* Calculator top UI */ }
-    ) { paddingValues ->
-        Surface(modifier = Modifier.padding(paddingValues)) {
-            CalculatorContent()
+    val uiState by viewModel.stateFlow.collectAsState()
+    LaunchedEffect(uiState.navigateToPrivateScreen) {
+        if (uiState.navigateToPrivateScreen) {
+            navHostController.navigate(Screen.MainVault.route)
         }
     }
 
-    // PIN Entry Bottom Sheet
-    if (showPinSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showPinSheet = false },
-            sheetState = sheetState
-        ) {
-            PinEntryContent(
-                pin = pin,
-                onPinChange = { pin = it },
-                reEnter = reEnterMode,
-                onConfirm = {
-                    if (!reEnterMode) {
-                        reEnterMode = true
-                        pin = ""
-                    } else {
-                        // Save PIN logic here
-                        showPinSheet = false
-                    }
-                }
+    Scaffold { paddingValues ->
+        Surface(modifier = Modifier.padding(paddingValues)) {
+            CalculatorContent(
+                uiState = uiState,
+                onPinSetup = viewModel::onSetPin,
+                onLoginTry = viewModel::onLoginTry,
             )
         }
     }
 }
 
+const val KEY_PIN = "userPin"
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun CalculatorContent() {
+fun CalculatorContent(
+    uiState: MainCalculatorViewModel.UiState,
+    onPinSetup: (String) -> Unit,
+    onLoginTry: (String) -> Unit
+) {
+    val mode = uiState.mode
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.background)
     ) {
-        val confirmingPin = false
-        val textToDisplay = if (confirmingPin) {
-            stringResource(R.string.confirmSetupYourPin)
-        } else {
-            stringResource(R.string.setupYourPin)
+        var calculatorText by remember { mutableStateOf("") }
+        if (mode == MainCalculatorViewModel.Mode.SETUP) {
+            val confirmingPin = uiState.firstTimeEnteredPin != null
+            val textToDisplay = if (confirmingPin) {
+                stringResource(R.string.confirmSetupYourPin)
+            } else {
+                stringResource(R.string.setupYourPin)
+            }
+            Text(
+                text = textToDisplay,
+                style = MaterialTheme.typography.bodyLarge
+                    .copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                modifier = Modifier.padding(20.dp)
+            )
         }
-        Text(
-            text = textToDisplay,
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-        )
         Spacer(Modifier.weight(1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text = "value",
-                style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground)
+                text = calculatorText,
+                style = MaterialTheme.typography.displayLarge
+                    .copy(color = MaterialTheme.colorScheme.onBackground)
             )
         }
+
         Box(
             modifier = Modifier
                 .padding(AppDimensions.marginLarge)
@@ -139,7 +128,7 @@ fun CalculatorContent() {
                     for (i in 7..9) {
                         BoxWithConstraints(modifier = Modifier.weight(1f)) {
                             TextButton(
-                                onClick = {},
+                                onClick = { calculatorText += i.toString() },
                                 shape = CircleShape,
                                 colors = ButtonDefaults.textButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -158,7 +147,7 @@ fun CalculatorContent() {
                     }
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText = calculatorText.dropLast(1) },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -181,7 +170,7 @@ fun CalculatorContent() {
                     for (i in 4..6) {
                         BoxWithConstraints(modifier = Modifier.weight(1f)) {
                             TextButton(
-                                onClick = {},
+                                onClick = { calculatorText += i.toString() },
                                 shape = CircleShape,
                                 colors = ButtonDefaults.textButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -200,7 +189,7 @@ fun CalculatorContent() {
                     }
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += Operator.Minus.icon },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -223,7 +212,7 @@ fun CalculatorContent() {
                     for (i in 1..3) {
                         BoxWithConstraints(modifier = Modifier.weight(1f)) {
                             TextButton(
-                                onClick = {},
+                                onClick = { calculatorText += i.toString() },
                                 shape = CircleShape,
                                 colors = ButtonDefaults.textButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -242,7 +231,7 @@ fun CalculatorContent() {
                     }
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += Operator.Plus.icon },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -265,7 +254,7 @@ fun CalculatorContent() {
                 ) {
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += "0" },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -283,7 +272,7 @@ fun CalculatorContent() {
 
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += "." },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -301,7 +290,7 @@ fun CalculatorContent() {
 
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += Operator.Multiply.icon },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -319,7 +308,7 @@ fun CalculatorContent() {
 
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = { calculatorText += Operator.Divide.icon },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -337,7 +326,14 @@ fun CalculatorContent() {
 
                     BoxWithConstraints(modifier = Modifier.weight(1f)) {
                         TextButton(
-                            onClick = {},
+                            onClick = {
+                                if (mode == MainCalculatorViewModel.Mode.SETUP) {
+                                    onPinSetup(calculatorText)
+                                    calculatorText = ""
+                                } else {
+                                    onLoginTry(calculatorText)
+                                }
+                            },
                             shape = CircleShape,
                             colors = ButtonDefaults.textButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -357,87 +353,10 @@ fun CalculatorContent() {
     }
 }
 
-@Composable
-fun EnterPinComponent(
-    modifier: Modifier,
-    value: String,
-    confirmingPin: Boolean
-) {
-    Column(
-        modifier = modifier
-    ) {
-
-    }
-}
-
-@Composable
-fun PinEntryContent(
-    pin: String,
-    onPinChange: (String) -> Unit,
-    reEnter: Boolean,
-    onConfirm: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if (reEnter) "Please re-enter your pin" else "Please setup your pin",
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Spacer(Modifier.height(16.dp))
-
-        // Display entered PIN
-        Row(horizontalArrangement = Arrangement.Center) {
-            repeat(6) { index ->
-                Text(
-                    text = if (index < pin.length) "*" else "_",
-                    modifier = Modifier.padding(4.dp),
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-        }
-
-        Spacer(Modifier.height(32.dp))
-        // Numeric keypad simulation
-        for (row in listOf(
-            listOf("7", "8", "9"),
-            listOf("4", "5", "6"),
-            listOf("1", "2", "3"),
-            listOf("0")
-        )) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                row.forEach { num ->
-                    Button(
-                        onClick = {
-                            if (pin.length < 6) onPinChange(pin + num)
-                        }
-                    ) { Text(num) }
-                }
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = onConfirm) { Text("=") }
-    }
-}
-
-@Preview
-@Composable
-fun CalcPreview() {
-    CalculatorTheme(darkTheme = true) {
-        CalculatorContent()
-    }
-}
-
 sealed class Operator(val icon: String) {
     object Plus : Operator("+")
     object Minus : Operator("-")
     object Multiply : Operator("x")
-    object Divide : Operator("/")
+    object Divide : Operator("÷")
     object Equal : Operator("=")
 }

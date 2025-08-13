@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vault.calculator.R
+import com.vault.calculator.ui.Screen
 import com.vault.calculator.ui.theme.AppDimensions
 import com.vault.calculator.ui.theme.CalculatorTheme
 
@@ -42,7 +43,9 @@ fun GettingStartedRoute(
         Surface(modifier = Modifier.padding(paddingValues)) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize()) {
-
+                    OnboardingScreen {
+                        navHostController.navigate(Screen.MainCalculator.withArgs(null))
+                    }
                 }
             }
         }

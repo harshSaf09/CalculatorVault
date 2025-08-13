@@ -14,16 +14,16 @@ import javax.inject.Inject
 @HiltViewModel
 class SplashViewModel @Inject constructor(private val settingsManager: SettingsManager) :
     ViewModel() {
-    private val _nextScreen = MutableStateFlow<Screen?>(null)
-    val nextScreen: StateFlow<Screen?> = _nextScreen
+    private val _nextScreen = MutableStateFlow<String?>(null)
+    val nextScreen: StateFlow<String?> = _nextScreen
 
     init {
         viewModelScope.launch {
             val pin = settingsManager.loginPin.first()
             if (pin.isNullOrBlank()) {
-                _nextScreen.value = Screen.GettingStarted
+                _nextScreen.value = Screen.GettingStarted.route
             } else {
-                _nextScreen.value = Screen.MainCalculator
+                _nextScreen.value = Screen.MainCalculator.withArgs(pin)
             }
         }
     }
